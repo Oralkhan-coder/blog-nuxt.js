@@ -1,10 +1,12 @@
 <template>
   <div class="container animate-fade-in">
     <div class="header-section animate-slide-up">
-      <h1 class="page-title">Latest Stories</h1>
-      <NuxtLink to="/blogs/create" class="btn btn-primary create-btn">
-        <span class="icon">+</span> Write a Story
-      </NuxtLink>
+      <!-- Title removed as requested -->
+      <div class="action-bar">
+        <NuxtLink to="/blogs/create" class="btn btn-primary create-btn">
+          <i class="pi pi-plus" style="margin-right: 0.5rem"></i> Write a Story
+        </NuxtLink>
+      </div>
     </div>
 
     <div v-if="pending" class="loading-spinner"></div>
@@ -16,12 +18,13 @@
     <div v-else class="grid">
       <div 
         v-for="(blog, index) in blogs" 
-        :key="blog.id" 
+        :key="blog._id" 
         class="card blog-card"
         :style="{ animationDelay: `${index * 100}ms` }"
       >
         <div class="card-content">
           <h2 class="blog-title">{{ blog.title }}</h2>
+          <div class="blog-meta">By {{ blog.author || 'Unknown' }}</div>
           <p class="blog-excerpt">{{ truncate(blog.content, 120) }}</p>
         </div>
         
@@ -29,72 +32,66 @@
           <NuxtLink :to="`/blogs/${blog._id}`" class="read-more">
             Read Article
           </NuxtLink>
-          <button @click="deleteBlog(blog.id)" class="btn-icon delete-btn" title="Delete Blog">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-          </button>
+          <div class="action-buttons">
+            <NuxtLink :to="`/blogs/${blog._id}/edit`" class="btn-icon edit-btn" title="Edit Blog">
+              <i class="pi pi-pencil"></i>
+            </NuxtLink>
+            <button @click="deleteBlog(blog._id)" class="btn-icon delete-btn" title="Delete Blog">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      blogs: [],
-      pending: false,
-      error: null
-    }
-  },
-  methods: {
-    async fetchBlogs() {
-      this.pending = true;
-      this.error = null;
-      try {
-        this.blogs = await $fetch('http://localhost:3000/api/blogs');
-      } catch (e) {
-        this.error = e;
-      } finally {
-        this.pending = false;
-      }
-    },
-    async deleteBlog(id) {
-      if (!confirm('Are you sure you want to delete this blog?')) return;
+<script setup>
+const blogs = ref([]);
+const pending = ref(false);
+const error = ref(null);
 
-      try {
-        await $fetch(`http://localhost:3000/api/blogs/${id}`, {
-          method: 'DELETE'
-        });
-        this.fetchBlogs();
-      } catch (e) {
-        alert('Failed to delete blog');
-        console.error(e);
-      }
-    },
-    truncate(text, length) {
-      if (!text) return '';
-      return text.length > length ? text.substring(0, length) + '...' : text;
-    }
-  },
-  mounted() {
-    this.fetchBlogs();
+const fetchBlogs = async () => {
+  pending.value = true;
+  error.value = null;
+  try {
+    blogs.value = await $fetch('http://localhost:3000/api/blogs');
+  } catch (e) {
+    error.value = e;
+  } finally {
+    pending.value = false;
   }
-}
+};
+
+const deleteBlog = async (id) => {
+  if (!confirm('Are you sure you want to delete this story?')) return;
+  
+  try {
+    await $fetch(`http://localhost:3000/api/blogs/${id}`, {
+      method: 'DELETE'
+    });
+    blogs.value = blogs.value.filter(blog => blog._id !== id);
+  } catch (e) {
+    alert('Failed to delete blog');
+    console.error(e);
+  }
+};
+
+const truncate = (text, length) => {
+  if (!text) return '';
+  return text.length > length ? text.substring(0, length) + '...' : text;
+};
+
+onMounted(() => {
+  fetchBlogs();
+});
 </script>
 
 <style scoped>
 .header-section {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4rem;
-}
-
-.create-btn .icon {
-  margin-right: 0.5rem;
-  font-size: 1.2rem;
-  line-height: 1;
+  justify-content: flex-end;
+  margin-bottom: 3rem;
 }
 
 .blog-card {
@@ -102,6 +99,7 @@ export default {
   flex-direction: column;
   height: 100%;
   animation: slideUp 0.6s ease-out backwards;
+  /* Glass effect from original design */
   border: 1px solid rgba(255, 255, 255, 0.8);
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
@@ -113,21 +111,28 @@ export default {
 
 .blog-title {
   font-size: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   color: var(--text-color);
   line-height: 1.3;
 }
 
+.blog-meta {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
 .blog-excerpt {
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 .card-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -154,6 +159,11 @@ export default {
   width: 100%;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .btn-icon {
   background: none;
   border: none;
@@ -165,12 +175,18 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1rem;
+}
+
+.btn-icon:hover {
+  background-color: #f1f5f9;
+  color: var(--primary-color);
+  transform: translateY(-2px);
 }
 
 .delete-btn:hover {
   background-color: #fee2e2;
   color: var(--danger-color);
-  transform: rotate(5deg) scale(1.1);
 }
 
 .error-message {
@@ -180,5 +196,16 @@ export default {
   background: #fee2e2;
   border-radius: var(--border-radius);
   animation: scaleIn 0.4s ease-out;
+}
+
+@media (max-width: 768px) {
+  .header-section {
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  
+  .blog-title {
+    font-size: 1.25rem;
+  }
 }
 </style>

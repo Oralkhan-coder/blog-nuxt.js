@@ -1,32 +1,30 @@
 <template>
   <div class="container">
     <div class="form-container animate-slide-up">
-      <h1 class="page-title">Publish a Story</h1>
+      <h1 class="page-title">Edit Story</h1>
+
+      <div v-if="loading" class="loading-spinner"></div>
       
-      <form @submit.prevent="createBlog" class="blog-form card">
+      <form v-else @submit.prevent="updateBlog" class="blog-form card">
         <div class="form-group">
           <label for="title">Title</label>
           <input 
             v-model="form.title" 
             type="text" 
             id="title" 
-            placeholder="Enter an engaging title..." 
+            placeholder="Enter title..." 
             required
-            class="animate-fade-in"
-            style="animation-delay: 0.1s"
           >
         </div>
 
         <div class="form-group">
-          <label for="title">Author Name</label>
+          <label for="author">Author Name</label>
           <input 
             v-model="form.author" 
             type="text" 
             id="author" 
-            placeholder="Enter an engaging title..." 
+            placeholder="Enter author name..." 
             required
-            class="animate-fade-in"
-            style="animation-delay: 0.1s"
           >
         </div>
 
@@ -34,21 +32,17 @@
           <label for="content">Story Content</label>
           <textarea 
             v-model="form.body" 
-            id="body" 
+            id="content" 
             rows="12" 
-            placeholder="Tell your story..." 
-            class="animate-fade-in"
-            style="animation-delay: 0.2s"
+            placeholder="Edit your story..." 
           ></textarea>
         </div>
 
-
-
-        <div class="form-actions animate-fade-in" style="animation-delay: 0.3s">
+        <div class="form-actions">
           <NuxtLink to="/blogs" class="btn btn-secondary">Cancel</NuxtLink>
           <button type="submit" class="btn btn-primary" :disabled="submitting">
-            <span v-if="submitting">Publishing...</span>
-            <span v-else>Publish Story</span>
+            <span v-if="submitting">Updating...</span>
+            <span v-else>Update Story</span>
           </button>
         </div>
       </form>
@@ -57,7 +51,11 @@
 </template>
 
 <script setup>
+const route = useRoute();
 const router = useRouter();
+const blogId = route.params.id;
+
+const loading = ref(true);
 const submitting = ref(false);
 const form = reactive({
   title: '',
@@ -65,17 +63,32 @@ const form = reactive({
   body: ''
 });
 
-const createBlog = async () => {
+onMounted(async () => {
+  try {
+    const blog = await $fetch(`http://localhost:3000/api/blogs/${blogId}`);
+    form.title = blog.title;
+    form.author = blog.author;
+    form.body = blog.content || blog.body;
+  } catch (e) {
+    console.error('Failed to fetch blog', e);
+    alert('Failed to load blog details.');
+    router.push('/blogs');
+  } finally {
+    loading.value = false;
+  }
+});
+
+const updateBlog = async () => {
   submitting.value = true;
   try {
-    await $fetch('http://localhost:3000/api/blogs', {
-      method: 'POST',
+    await $fetch(`http://localhost:3000/api/blogs/${blogId}`, {
+      method: 'PUT',
       body: form
     });
     router.push('/blogs');
   } catch (e) {
-    alert('Failed to create blog. Please try again.');
-    console.error(e);
+    console.error('Update failed', e);
+    alert('Failed to update blog.');
   } finally {
     submitting.value = false;
   }
