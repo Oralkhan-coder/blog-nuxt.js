@@ -30,12 +30,7 @@
 
         <div class="form-group">
           <label for="content">Story Content</label>
-          <textarea 
-            v-model="form.body" 
-            id="content" 
-            rows="12" 
-            placeholder="Edit your story..." 
-          ></textarea>
+          <TinyEditor v-model="form.body" />
         </div>
 
         <div class="form-actions">

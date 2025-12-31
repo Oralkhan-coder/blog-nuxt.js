@@ -2,35 +2,21 @@
   <div class="container">
     <div class="form-container animate-slide-up">
       <h1 class="page-title">Publish a Story</h1>
-      
+
       <form @submit.prevent="createBlog" class="blog-form card">
         <div class="form-group">
           <label for="title">Title</label>
-          <input 
-            v-model="form.title" 
-            type="text" 
-            id="title" 
-            placeholder="Enter an engaging title..." 
-            required
-            class="animate-fade-in"
-            style="animation-delay: 0.1s"
-          >
+          <input v-model="form.title" type="text" id="title" placeholder="Enter an engaging title..." required
+            class="animate-fade-in" style="animation-delay: 0.1s">
         </div>
 
         <div class="form-group">
           <label for="title">Author Name</label>
-          <input 
-            v-model="form.author" 
-            type="text" 
-            id="author" 
-            placeholder="Enter an engaging title..." 
-            required
-            class="animate-fade-in"
-            style="animation-delay: 0.1s"
-          >
+          <input v-model="form.author" type="text" id="author" placeholder="Enter an engaging title..."
+            class="animate-fade-in" style="animation-delay: 0.1s">
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label for="content">Story Content</label>
           <textarea 
             v-model="form.body" 
@@ -40,8 +26,12 @@
             class="animate-fade-in"
             style="animation-delay: 0.2s"
           ></textarea>
-        </div>
+        </div> -->
 
+        <div class="form-group">
+          <label for="content">Story Content</label>
+          <TinyEditor v-model="form.body" />
+        </div>
 
 
         <div class="form-actions animate-fade-in" style="animation-delay: 0.3s">
